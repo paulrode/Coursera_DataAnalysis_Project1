@@ -107,23 +107,41 @@ if (!file.exists("data")) {
 ```{r}
 
 
-household <- read.csv("./data/household_power_consumption.txt", sep = ";", header = TRUE, na.strings = "?")
+household <- read.csv("./data/household_power_consumption.txt", sep = ";", header = TRUE, na.strings = "?", colClasses = c("character", "character", rep("numeric", 7)))
 
-household$Date <- dmy(household$Date)
-household$Time <- hms(household$Time)
-household$Global_active_power <- as.numeric(household$Global_active_power)
-household$Global_reactive_power <- as.numeric(household$Global_reactive_power)
-household$Voltage <- as.numeric(household$Voltage)
-household$Global_intensity <- as.numeric(household$Global_intensity)
-household$Sub_metering_1 <- as.numeric(household$Sub_metering_1)
-household$Sub_metering_2 <- as.numeric(household$Sub_metering_2)
+household <- mutate(household, DateTime = (dmy_hms(paste(household$Date , household$Time, sep = '_'))))
 
-household1 <- filter(household, Date == "2007-02-01" | Date == "2007-02-02")
+household %>% filter(DateTime >= ymd("2007-02-01") & DateTime <= ymd("2007-02-03")) %>% select(-Date, -Time) %>% select(8,1,2,3,4,5,6,7) -> household1
 
+#Chart 1 
 hist(household1$Global_active_power, xlab = "Global Active Power (kilowatts)", ylab = "Frequency", main = "Global Active Power", col = "red", breaks = 11)
 
-with(household1, plot(Date, Global_active_power))
-view(household1$Date)
+#Chart 2
+with(household1, plot(DateTime, Global_active_power, type = "l", xlab = "",  ylab = "Global Active Power (killowatts)"))
+
+#Chart 3
+plot(household1$DateTime, household1$Sub_metering_1, type = "l", xlab = "",  ylab = "Energy sub metering")
+lines(household1$DateTime, household1$Sub_metering_2, type = "l", col = "red" )
+lines(household1$DateTime, household1$Sub_metering_3, type = "l", col = "blue" )
+legend("topright", legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "red", "blue"), lty = 1)
+
+#Chart 4
+par(mfrow = c(2,2) )
+
+#Chart 4-1
+with(household1, plot(DateTime, Global_active_power, type = "l", xlab = "",  ylab = "Global Active Power (killowatts)"))
+
+#Chart 4-2
+with(household1, plot(DateTime, Voltage, type = "l", xlab = "datetime",  ylab = "Voltage"))
+
+#Chart 4-3
+plot(household1$DateTime, household1$Sub_metering_1, type = "l", xlab = "",  ylab = "Energy sub metering")
+lines(household1$DateTime, household1$Sub_metering_2, type = "l", col = "red" )
+lines(household1$DateTime, household1$Sub_metering_3, type = "l", col = "blue" )
+legend("topright", legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "red", "blue"), lty = 1)
+
+#Chart 4-4
+with(household1, plot(DateTime, Global_reactive_power, type = "l", xlab = "datetime"))
 
 
 
